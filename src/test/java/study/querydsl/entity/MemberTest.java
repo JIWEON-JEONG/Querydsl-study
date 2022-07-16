@@ -9,10 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import study.querydsl.Member;
-import study.querydsl.QMember;
-import study.querydsl.QTeam;
-import study.querydsl.Team;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -21,8 +17,8 @@ import javax.transaction.Transactional;
 
 import java.util.List;
 
-import static study.querydsl.QMember.member;
-import static study.querydsl.QTeam.team;
+import static study.querydsl.entity.QMember.member;
+import static study.querydsl.entity.QTeam.team;
 
 
 /**
@@ -112,7 +108,7 @@ public class MemberTest {
                 .selectFrom(member)
                 .fetchOne();
 
-        Member fetchFirst = queryFactory.selectFrom(QMember.member)
+        Member fetchFirst = queryFactory.selectFrom(member)
                 .fetchFirst();
 
         //fetch 권장

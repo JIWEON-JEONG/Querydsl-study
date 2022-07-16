@@ -1,6 +1,7 @@
-package study.querydsl;
+package study.querydsl.entity;
 
 import lombok.*;
+import study.querydsl.entity.Member;
 
 import javax.persistence.*;
 import java.util.ArrayList;
