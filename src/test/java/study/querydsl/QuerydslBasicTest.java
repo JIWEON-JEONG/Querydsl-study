@@ -2,12 +2,10 @@ package study.querydsl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +87,7 @@ public class QuerydslBasicTest {
     void findDtoByField() {
         List<MemberDto> result = queryFactory
                 .select(Projections.fields(MemberDto.class,
-                        member.username,
+                        member.username.as("name"),
                         member.age))
                 .from(member)
                 .fetch();
@@ -104,7 +102,7 @@ public class QuerydslBasicTest {
         QMember qMember = new QMember("memberSub");
         List<UserDto> result = queryFactory
                 .select(Projections.fields(UserDto.class,
-                        member.username.as("name"),
+                        member.username,
                         ExpressionUtils.as(JPAExpressions
                                 .select(qMember.age.max())
                                 .from(qMember), "age")
