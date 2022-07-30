@@ -1,0 +1,149 @@
+package study.querydsl.repository;
+
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import study.querydsl.dto.MemberSearchCondition;
+import study.querydsl.dto.MemberTeamDto;
+import study.querydsl.entity.Member;
+import study.querydsl.entity.Team;
+
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@Transactional
+class MemberJpaRepositoryTest {
+
+    @Autowired
+    EntityManager em;
+
+    @Autowired
+    MemberRepository memberRepository;
+
+    @Test
+    public void basicTest() {
+        Member member = new Member("member1", 10);
+        memberRepository.save(member);
+
+        //직접 get() 하는게 좋지 않다. 이유는 ?? 5:38초
+        Member findMember = memberRepository.findById(member.getId()).get();
+        assertThat(findMember).isEqualTo(member);
+        List<Member> result1 = memberRepository.findAll();
+        assertThat(result1).containsExactly(member);
+        List<Member> result2 = memberRepository.findByUsername("member1");
+        assertThat(result2).containsExactly(member);
+    }
+
+    @Test
+    public void basicQuerydslTest() {
+        Member member = new Member("member1", 10);
+        memberRepository.save(member);
+
+        //직접 get() 하는게 좋지 않다. 이유는 ?? 5:38초
+        Member findMember = memberRepository.findById(member.getId()).get();
+        assertThat(findMember).isEqualTo(member);
+        List<Member> result1 = memberRepository.findAll();
+        assertThat(result1).containsExactly(member);
+        List<Member> result2 = memberRepository.findByUsername("member1");
+        assertThat(result2).containsExactly(member);
+    }
+
+    @Test
+    public void searchTest() {
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        em.persist(teamA);
+        em.persist(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamA);
+        Member member3 = new Member("member3", 30, teamB);
+        Member member4 = new Member("member4", 40, teamB);
+        em.persist(member1);
+        em.persist(member2);
+        em.persist(member3);
+        em.persist(member4);
+
+        /**
+         * 동적 쿼 리를 짤때에는 기본 조건이 있거나, limit 가 있는것이 좋다.(paging query 이용하거나)
+         * 왜냐하면 조건이 없으면 다 긁어옴.
+         */
+        MemberSearchCondition condition = new MemberSearchCondition();
+        condition.setAgeGoe(35);
+        condition.setAgeLoe(40);
+        condition.setTeamName("teamB");
+
+        List<MemberTeamDto> result = memberRepository.search(condition);
+        assertThat(result).extracting("username").containsExactly("member4");
+    }
+
+    @Test
+    public void searchPageSimple() {
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        em.persist(teamA);
+        em.persist(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamA);
+        Member member3 = new Member("member3", 30, teamB);
+        Member member4 = new Member("member4", 40, teamB);
+        em.persist(member1);
+        em.persist(member2);
+        em.persist(member3);
+        em.persist(member4);
+
+        /**
+         * 동적 쿼 리를 짤때에는 기본 조건이 있거나, limit 가 있는것이 좋다.(paging query 이용하거나)
+         * 왜냐하면 조건이 없으면 다 긁어옴.
+         */
+        MemberSearchCondition condition = new MemberSearchCondition();
+        PageRequest pageRequest = PageRequest.of(0, 3);
+
+        Page<MemberTeamDto> result = memberRepository.searchPageSimple(condition, pageRequest);
+
+        assertThat(result.getTotalPages()).isEqualTo(2);
+        assertThat(result.getTotalElements()).isEqualTo(4);
+        assertThat(result.getSize()).isEqualTo(3);
+        assertThat(result).extracting("username").containsExactly("member1","member2","member3");
+    }
+
+    @Test
+    public void searchPageComplex() {
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        em.persist(teamA);
+        em.persist(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamA);
+        Member member3 = new Member("member3", 30, teamB);
+        Member member4 = new Member("member4", 40, teamB);
+        em.persist(member1);
+        em.persist(member2);
+        em.persist(member3);
+        em.persist(member4);
+
+        /**
+         * 동적 쿼 리를 짤때에는 기본 조건이 있거나, limit 가 있는것이 좋다.(paging query 이용하거나)
+         * 왜냐하면 조건이 없으면 다 긁어옴.
+         */
+        MemberSearchCondition condition = new MemberSearchCondition();
+        PageRequest pageRequest = PageRequest.of(0, 2);
+
+        Page<MemberTeamDto> result = memberRepository.searchPageComplex(condition, pageRequest);
+
+        assertThat(result.getTotalPages()).isEqualTo(2);
+        assertThat(result.getTotalElements()).isEqualTo(4);
+        assertThat(result.getSize()).isEqualTo(2);
+        assertThat(result).extracting("username").containsExactly("member1","member2");
+    }
+
+
+}
